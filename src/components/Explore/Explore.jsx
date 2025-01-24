@@ -7,6 +7,7 @@ const Explore = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
+    const [mediaType, setMediaType] = useState('image');
     const [mediaItems, setMediaItems] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -29,7 +30,7 @@ const Explore = () => {
     useEffect(() => {
         const retrieveMediaItems = async () => {
             try {
-                const response = await fetch(`https://images-api.nasa.gov/search?q=${submittedSearchTerm}&media_type=image&page_size=10`);
+                const response = await fetch(`https://images-api.nasa.gov/search?q=${submittedSearchTerm}&media_type=${mediaType}&page_size=10`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -42,7 +43,11 @@ const Explore = () => {
         };
 
         retrieveMediaItems();
-    }, [submittedSearchTerm]);
+    }, [submittedSearchTerm, mediaType]);
+
+    const handleMediaTypeSelection = (type) => {
+        setMediaType(type);
+    };
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
@@ -87,10 +92,19 @@ const Explore = () => {
                         <button className={styles.searchBtn}>Search</button>
                     </form>
 
-                    {/* TODO: Implement videos */}
                     <div className={styles.mediaTypeToggle}>
-                        <button className={styles.active} data-type="image">Images</button>
-                        <button data-type="videdo">Videos</button>
+                        <button
+                            onClick={() => handleMediaTypeSelection('image')}
+                            className={mediaType === 'image' ? styles.active : ''}
+                        >
+                            Images
+                        </button>
+                        <button
+                            onClick={() => handleMediaTypeSelection('video')}
+                            className={mediaType === 'video' ? styles.active : ''}
+                        >
+                            Videos
+                        </button>
                     </div>
                 </header>
 
