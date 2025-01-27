@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import styles from './Explore.module.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { truncateText } from '/src/utils/helpers.js';
+import styles from './Explore.module.css';
 
 const Explore = () => {
     const navigate = useNavigate();
@@ -10,7 +10,7 @@ const Explore = () => {
     const [mediaType, setMediaType] = useState('image');
     const [mediaItems, setMediaItems] = useState([]);
     const [loading, setLoading] = useState(false);
-
+    
     const [searchTerm, setSearchTerm] = useState(() => {
         return searchParams.get('search') || '';
     });
@@ -18,15 +18,16 @@ const Explore = () => {
         return searchParams.get('search') || '';
     });
 
-    /**
-     * Fetches media items from NASA's API.
-     * Updates the `mediaItems` state with the retrieved data.
-     * Handles loading and error states during the fetch process.
-     * 
-     * @async
-     * @function retrieveMediaItems
-     * @throws {Error} If the fetch operation fails.
-     */
+    const MAX_KEYWORDS = 4;
+    const [expandedItems, setExpandedItems] = useState({});
+
+    const toggleKeywords = (itemId) => {
+        setExpandedItems((prevExpandedItems) => ({
+            ...prevExpandedItems,
+            [itemId]: !prevExpandedItems[itemId]
+        }));
+    };
+
     useEffect(() => {
         const retrieveMediaItems = async () => {
             try {
@@ -61,6 +62,34 @@ const Explore = () => {
         setSearchTerm('');
         setSubmittedSearchTerm('');
         setSearchParams({});
+    };
+
+    const KeywordList = ({ keywords, itemId }) => {
+        if (!keywords) {
+            return null;
+        }
+    
+        const isExpanded = expandedItems[itemId];
+        const displayedKeywords = isExpanded ? keywords : keywords.slice(0, MAX_KEYWORDS);
+
+        return (
+            <div className={styles.keywordList}>
+                {displayedKeywords.map((keyword, index) => (
+                    <span key={index} className={styles.keyword}>
+                        {keyword}
+                    </span>
+                ))}
+
+                {keywords.length > MAX_KEYWORDS && (
+                    <button
+                        onClick={() => toggleKeywords(itemId)}
+                        className={styles.showMoreBtn}
+                    >
+                        {isExpanded ? 'Show Less' : `+${keywords.length - MAX_KEYWORDS} more`}
+                    </button>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -113,9 +142,15 @@ const Explore = () => {
                         mediaItems.map((mediaItem, index) => (
                             <div key={index} className={styles.mediaItem}>
                                 <img src={mediaItem.links[0].href} alt={mediaItem.data[0].title} />
+
                                 <div className={styles.mediaInfo}>
                                     <h3>{mediaItem.data[0].title}</h3>
                                     <p>{truncateText(mediaItem.data[0].description)}</p>
+
+                                    <KeywordList
+                                        keywords={mediaItem.data[0].keywords}
+                                        itemId={index}
+                                    />
                                 </div>
                             </div>
                         ))  
@@ -124,13 +159,8 @@ const Explore = () => {
                     )}
                 </div>
             </main>
-
-            <div className={styles.modal}>
-                <div className={styles.modalContent}>
-                    <button className={styles.modalClose}>&times;</button>
-                    <div className={styles.modalBody}></div>
-                </div>
-            </div>
+            
+            
         </>
     );
 };
