@@ -10,7 +10,7 @@ const Explore = () => {
     const [mediaType, setMediaType] = useState('image');
     const [mediaItems, setMediaItems] = useState([]);
     const [loading, setLoading] = useState(false);
-    
+
     const [searchTerm, setSearchTerm] = useState(() => {
         return searchParams.get('search') || '';
     });
@@ -48,6 +48,7 @@ const Explore = () => {
 
     const handleMediaTypeSelection = (type) => {
         setMediaType(type);
+        setExpandedItems({});
     };
 
     const handleSearchSubmit = (event) => {
@@ -160,7 +161,7 @@ const Explore = () => {
                 </div>
             </main>
             
-            
+            {/* TODO: Pagination */}
         </>
     );
 };
