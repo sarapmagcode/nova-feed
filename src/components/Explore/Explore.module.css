@@ -146,6 +146,35 @@ header .mediaTypeToggle button.active {
     font-size: 0.875rem;
 }
 
+/* =========================== PAGINATION =========================== */
+.pagination {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pagination button {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.pagination button svg {
+    width: 1.3rem;
+}
+
+.pagination .prevBtn {
+    padding-right: 0.7rem;
+    padding-left: 0.3rem;
+}
+
+.pagination .nextBtn {
+    padding-left: 0.7rem;
+    padding-right: 0.3rem;
+}
+
 /* =========================== RESPONSIVE =========================== */
 /* Tablet Styles */
 @media (min-width: 768px) {

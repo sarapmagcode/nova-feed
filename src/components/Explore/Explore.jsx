@@ -7,10 +7,12 @@ const Explore = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
+    // Media
     const [mediaType, setMediaType] = useState('image');
     const [mediaItems, setMediaItems] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    // Search Term
     const [searchTerm, setSearchTerm] = useState(() => {
         return searchParams.get('search') || '';
     });
@@ -18,6 +20,7 @@ const Explore = () => {
         return searchParams.get('search') || '';
     });
 
+    // Keywords
     const MAX_KEYWORDS = 4;
     const [expandedItems, setExpandedItems] = useState({});
 
@@ -28,41 +31,72 @@ const Explore = () => {
         }));
     };
 
+    // Pages
+    const PAGE_SIZE = 10;
+    const [totalPages, setTotalPages] = useState(0);
+    const [pageNumber, setPageNumber] = useState(() => {
+        const page = searchParams.get('page');
+        const parsedPage = page ? parseInt(page) : 1;
+        return parsedPage > 0 ? parsedPage : 1;
+    });
+
     useEffect(() => {
         const retrieveMediaItems = async () => {
             try {
-                const response = await fetch(`https://images-api.nasa.gov/search?q=${submittedSearchTerm}&media_type=${mediaType}&page_size=10`);
+                const response = await fetch(`https://images-api.nasa.gov/search?q=${submittedSearchTerm}&media_type=${mediaType}&page=${pageNumber}&page_size=${PAGE_SIZE}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
                 setMediaItems(data.collection.items);
+                
+                const totalHits = data.collection.metadata.total_hits;
+                setTotalPages(Math.ceil(totalHits / PAGE_SIZE));
+
+                if (searchParams.get('page') !== pageNumber.toString()) {
+                    setSearchParams({
+                        page: pageNumber.toString(),
+                        ...(submittedSearchTerm && { search: submittedSearchTerm }),
+                    });
+                }
+
+                // window.scroll(0, 0);
             } catch (error) {
                 console.error('Failed to retrieve media items:', error);
             }
         };
 
         retrieveMediaItems();
-    }, [submittedSearchTerm, mediaType]);
+    }, [pageNumber, submittedSearchTerm, mediaType]);
 
     const handleMediaTypeSelection = (type) => {
         setMediaType(type);
         setExpandedItems({});
+
+        setPageNumber(1);
+        setSearchParams({
+            page: '1',
+            ...(searchTerm && { search: searchTerm }),
+        })
     };
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
+
+        setPageNumber(1);
         setSubmittedSearchTerm(searchTerm);
         setSearchParams({
-            search: searchTerm
+            page: '1',
+            ...(searchTerm && { search: searchTerm }),
         });
     };
 
     const clearSearch = () => {
         setSearchTerm('');
         setSubmittedSearchTerm('');
-        setSearchParams({});
+        setPageNumber(1);
+        setSearchParams({ page: '1' });
     };
 
     const KeywordList = ({ keywords, itemId }) => {
@@ -91,6 +125,18 @@ const Explore = () => {
                 )}
             </div>
         );
+    };
+
+    const decrementPageNumber = () => {
+        if (pageNumber > 1) {
+            setPageNumber((prevPageNumber) => prevPageNumber - 1);
+        }
+    };
+
+    const incrementPageNumber = () => {
+        if (pageNumber < totalPages) {
+            setPageNumber((prevPageNumber) => prevPageNumber + 1);
+        }
     };
 
     return (
@@ -162,6 +208,25 @@ const Explore = () => {
             </main>
             
             {/* TODO: Pagination */}
+            <div className={styles.pagination}>
+                <button onClick={decrementPageNumber} className={styles.prevBtn}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10.8284 12.0007L15.7782 16.9504L14.364 18.3646L8 12.0007L14.364 5.63672L15.7782 7.05093L10.8284 12.0007Z"></path>
+                    </svg>
+                    Prev
+                </button>
+
+                <p>
+                    {pageNumber} of {totalPages}
+                </p>
+
+                <button onClick={incrementPageNumber} className={styles.nextBtn}>
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.1717 12.0007L8.22192 7.05093L9.63614 5.63672L16.0001 12.0007L9.63614 18.3646L8.22192 16.9504L13.1717 12.0007Z"></path>
+                    </svg>
+                </button>
+            </div>
         </>
     );
 };
