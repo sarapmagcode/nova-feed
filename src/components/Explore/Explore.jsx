@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { truncateText } from '/src/utils/helpers.js';
 import styles from './Explore.module.css';
@@ -40,6 +40,11 @@ const Explore = () => {
         return parsedPage > 0 ? parsedPage : 1;
     });
 
+    // Pagination
+    const [isPaginationHidden, setIsPaginationHidden] = useState(true);
+    const [isPrevHidden, setIsPrevHidden] = useState(false);
+    const [isNextHidden, setIsNextHidden] = useState(false);
+
     useEffect(() => {
         const retrieveMediaItems = async () => {
             try {
@@ -52,8 +57,17 @@ const Explore = () => {
                 setMediaItems(data.collection.items);
                 
                 const totalHits = data.collection.metadata.total_hits;
-                setTotalPages(Math.ceil(totalHits / PAGE_SIZE));
+                const calculatedTotalPages = Math.max(1, Math.ceil(totalHits / PAGE_SIZE));
+                setTotalPages(calculatedTotalPages);
 
+                if (totalHits > 0) {
+                    setIsPrevHidden(pageNumber === 1);
+                    setIsNextHidden(pageNumber >= calculatedTotalPages);
+                    setIsPaginationHidden(false);
+                } else {
+                    setIsPaginationHidden(true);
+                }
+                
                 if (searchParams.get('page') !== pageNumber.toString()) {
                     setSearchParams({
                         page: pageNumber.toString(),
@@ -61,7 +75,7 @@ const Explore = () => {
                     });
                 }
 
-                // window.scroll(0, 0);
+                window.scroll(0, 0);
             } catch (error) {
                 console.error('Failed to retrieve media items:', error);
             }
@@ -77,7 +91,7 @@ const Explore = () => {
         setPageNumber(1);
         setSearchParams({
             page: '1',
-            ...(searchTerm && { search: searchTerm }),
+            ...(submittedSearchTerm && { search: submittedSearchTerm }),
         })
     };
 
@@ -208,25 +222,29 @@ const Explore = () => {
             </main>
             
             {/* TODO: Pagination */}
-            <div className={styles.pagination}>
-                <button onClick={decrementPageNumber} className={styles.prevBtn}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M10.8284 12.0007L15.7782 16.9504L14.364 18.3646L8 12.0007L14.364 5.63672L15.7782 7.05093L10.8284 12.0007Z"></path>
-                    </svg>
-                    Prev
-                </button>
+            {!isPaginationHidden && (
+                <div className={styles.pagination}>
+                    {!isPrevHidden && (
+                        <button onClick={decrementPageNumber} className={styles.prevBtn}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M10.8284 12.0007L15.7782 16.9504L14.364 18.3646L8 12.0007L14.364 5.63672L15.7782 7.05093L10.8284 12.0007Z"></path>
+                            </svg>
+                            Prev
+                        </button>
+                    )}
 
-                <p>
-                    {pageNumber} of {totalPages}
-                </p>
+                    <p>{pageNumber} of {totalPages}</p>
 
-                <button onClick={incrementPageNumber} className={styles.nextBtn}>
-                    Next
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M13.1717 12.0007L8.22192 7.05093L9.63614 5.63672L16.0001 12.0007L9.63614 18.3646L8.22192 16.9504L13.1717 12.0007Z"></path>
-                    </svg>
-                </button>
-            </div>
+                    {!isNextHidden && (
+                        <button onClick={incrementPageNumber} className={styles.nextBtn}>
+                            Next
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13.1717 12.0007L8.22192 7.05093L9.63614 5.63672L16.0001 12.0007L9.63614 18.3646L8.22192 16.9504L13.1717 12.0007Z"></path>
+                            </svg>
+                        </button>
+                    )}
+                </div>
+            )}
         </>
     );
 };
