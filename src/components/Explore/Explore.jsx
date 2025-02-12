@@ -10,7 +10,6 @@ const Explore = () => {
     // Media
     const [mediaType, setMediaType] = useState('image');
     const [mediaItems, setMediaItems] = useState([]);
-    const [loading, setLoading] = useState(false);
 
     // Search Term
     const [searchTerm, setSearchTerm] = useState(() => {
@@ -200,6 +199,7 @@ const Explore = () => {
 
                 <div className={styles.resultsGrid}>
                     {mediaItems.length > 0 ? (
+                        // Actual Items
                         mediaItems.map((mediaItem, index) => (
                             <div key={index} className={styles.mediaItem}>
                                 <img src={mediaItem.links[0].href} alt={mediaItem.data[0].title} />
@@ -215,13 +215,30 @@ const Explore = () => {
                                 </div>
                             </div>
                         ))  
+                    ) : submittedSearchTerm ? (
+                        <p className={styles.statusText}>No items found matching "{submittedSearchTerm}"</p>
                     ) : (
-                        <div className={styles.loading}>Searching the cosmos...</div>
+                        // Skeleton Items
+                        Array.from({ length: 5 }).map((_, index) => (
+                            <div key={index} className={styles.mediaItemSkeleton}>
+                                <div className={styles.imageSkeleton}></div>
+
+                                <div className={styles.mediaInfoSkeleton}>
+                                    <div className={styles.titleSkeleton}></div>
+                                    <div className={styles.descriptionSkeleton}></div>
+
+                                    <div className={styles.keywordListSkeleton}>
+                                        {Array.from({ length: 4 }).map((_, index) => (
+                                            <div key={index} className={styles.keywordSkeleton}></div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
                     )}
                 </div>
             </main>
             
-            {/* TODO: Pagination */}
             {!isPaginationHidden && (
                 <div className={styles.pagination}>
                     {!isPrevHidden && (
